@@ -79,24 +79,28 @@ class Validator:
 
         #self.entries = entries
 
-    def parse(self) -> List[List[str]]:
+    def parse(self) -> (List[List[str]], List[Entry]):
         '''
         Выполняет проверку корректности записей
 
         Returns
         -------
-          List[List[str]]:
-            Список списков неверных записей по названиям ключей
+          (List[List[str]], List[Entry]):
+            Пара: cписок списков неверных записей по названиям ключей
+						и список верных записей
         '''
 
         illegal_entries = []
+        legal_entries = []
 
         for i in self.entries:
             illkeys = self.parse_entry(i)
 
             if len(illkeys) != 0:
                 illegal_entries.append(illkeys)
-        return illegal_entries
+            else:
+                legal_entries.append(i)
+        return (illegal_entries, legal_entries)
 
     def parse_entry(self, entry: Entry) -> List[str]:
         '''
@@ -382,6 +386,46 @@ def show_summary(result: List[List[str]], filename: str = ''):
             for key, value in errors_count.items():
                 file.write(key + ': ' + str(value) + '\n')
 
+def save_in_json(data: List[Entry], filename: str):
+  '''
+      Выдаёт итоговую информацию о верных записях в формате json
+
+      Parameters
+      ----------
+        data : List[Entry]
+          Список верных записей
+        filename : str
+          Имя файла для записи
+  '''
+  f = open(filename, 'w')
+
+  f.write('[')
+
+  for i in data:
+    f.write('''
+    {
+      "email": "%s",
+      "weight": %d,
+      "inn": "%s",
+      "passport_series": "%s",
+      "occupation": "%s",
+      "age": %d,
+      "academic_degree": "%s",
+      "worldview": "%s",
+      "address": "%s",
+    },''' % (i.email,
+    i.weight,
+    i.inn,
+    i.passport_series,
+    i.occupation,
+    i.age,
+    i.academic_degree,
+    i.worldview,
+    i.address))
+  f.write('\n]')
+  f.close()
+
+
 if len(sys.argv) < 2:
   input_file = '21.txt'
   output_file = '21_result.txt'
@@ -410,6 +454,6 @@ with tqdm(total=100) as progressbar:
 
     progressbar.update(40)
 
-    show_summary(res, output_file)
-
+    show_summary(res[0], output_file)
+    save_in_json(res[1], 'valid_data.txt')
 
